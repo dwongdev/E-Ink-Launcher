@@ -159,83 +159,73 @@ public class SettingFramgent extends Fragment implements View.OnClickListener {
 
   @Override
   public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.toBack:
-      case R.id.rootView:
-        getActivity().onBackPressed();
-        break;
-      case R.id.deleteApp:
-        Intent intent = new Intent();
-        intent.putExtra(Launcher.DELETEAPP, true);
-        intent.setAction(Launcher.LAUNCHER_ACTION);
-        getActivity().sendBroadcast(intent);
-        getActivity().onBackPressed();
-        break;
-      case R.id.showStatusBar:
-        Config.showStatusBar = !Config.showStatusBar;
+      int id = v.getId();
+      if (id == R.id.toBack || id == R.id.rootView) {
+          getActivity().onBackPressed();
+      } else if (id == R.id.deleteApp) {
+          Intent intent = new Intent();
+          intent.putExtra(Launcher.DELETEAPP, true);
+          intent.setAction(Launcher.LAUNCHER_ACTION);
+          getActivity().sendBroadcast(intent);
+          getActivity().onBackPressed();
+      } else if (id == R.id.showStatusBar) {
+          Intent intent;
+          Config.showStatusBar = !Config.showStatusBar;
 
-        intent = new Intent(Launcher.LAUNCHER_ACTION);
-        intent.putExtra(Launcher.LAUNCHER_SHOW_STATUS_BAR,Config.showStatusBar);
-        getActivity().sendBroadcast(intent);
-        getActivity().onBackPressed();
-        break;
-      case R.id.helpAbout:
-        AboutDialog.getInstance(getActivity()).show();
-        break;
-      case R.id.btnHideFontControl:
-        rootView.findViewById(R.id.menuList).setVisibility(View.VISIBLE);
-        rootView.findViewById(R.id.font_control_p).setVisibility(View.GONE);
-        break;
-      case R.id.changeFontSize:
-        rootView.findViewById(R.id.menuList).setVisibility(View.GONE);
-        rootView.findViewById(R.id.font_control_p).setVisibility(View.VISIBLE);
-        break;
-      case R.id.hideDivider:
-        Config.hideDivider = !Config.hideDivider;
-        hideDivider.setText(Config.hideDivider ? "显示分隔线" : "隐藏分隔线");
+          intent = new Intent(Launcher.LAUNCHER_ACTION);
+          intent.putExtra(Launcher.LAUNCHER_SHOW_STATUS_BAR, Config.showStatusBar);
+          getActivity().sendBroadcast(intent);
+          getActivity().onBackPressed();
+      } else if (id == R.id.helpAbout) {
+          AboutDialog.getInstance(getActivity()).show();
+      } else if (id == R.id.btnHideFontControl) {
+          rootView.findViewById(R.id.menuList).setVisibility(View.VISIBLE);
+          rootView.findViewById(R.id.font_control_p).setVisibility(View.GONE);
+      } else if (id == R.id.changeFontSize) {
+          rootView.findViewById(R.id.menuList).setVisibility(View.GONE);
+          rootView.findViewById(R.id.font_control_p).setVisibility(View.VISIBLE);
+      } else if (id == R.id.hideDivider) {
+          Intent intent;
+          Config.hideDivider = !Config.hideDivider;
+          hideDivider.setText(Config.hideDivider ? "显示分隔线" : "隐藏分隔线");
 
-        intent = new Intent();
-        intent.putExtra(Launcher.LAUNCHER_HIDE_DIVIDER, Config.hideDivider);
-        intent.setAction(Launcher.LAUNCHER_ACTION);
-        getActivity().sendBroadcast(intent);
-        getActivity().onBackPressed();
-        break;
-      case R.id.menu_ftp:
-        Utils.checkStroagePermission(getActivity(), new Runnable() {
-          @Override
-          public void run() {
-            if (!FTPService.isRunning()) {
-              if (FTPService.isConnectedToWifi(getActivity()))
-                startServer();
-              else
-                Toast.makeText(getActivity(), "大哥诶，麻烦先把WIFI连上吧", Toast.LENGTH_SHORT).show();
-            } else {
-              stopServer();
-            }
+          intent = new Intent();
+          intent.putExtra(Launcher.LAUNCHER_HIDE_DIVIDER, Config.hideDivider);
+          intent.setAction(Launcher.LAUNCHER_ACTION);
+          getActivity().sendBroadcast(intent);
+          getActivity().onBackPressed();
+      } else if (id == R.id.menu_ftp) {
+          Utils.checkStroagePermission(getActivity(), new Runnable() {
+              @Override
+              public void run() {
+                  if (!FTPService.isRunning()) {
+                      if (FTPService.isConnectedToWifi(getActivity()))
+                          startServer();
+                      else
+                          Toast.makeText(getActivity(), "大哥诶，麻烦先把WIFI连上吧", Toast.LENGTH_SHORT).show();
+                  } else {
+                      stopServer();
+                  }
+              }
+          });
+      } else if (id == R.id.showWifiName) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+              requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 10002);
           }
-        });
-        break;
-      case R.id.showWifiName:
-        if (Build.VERSION.SDK_INT>= Build.VERSION_CODES.O){
-          requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},10002);
-        }
-        break;
-      case R.id.showCustomIcon:
-        Utils.checkStroagePermission(getActivity(), new Runnable() {
-          @Override
-          public void run() {
-            Config.showCustomIcon = !Config.showCustomIcon;
-            Intent intent = new Intent(Launcher.LAUNCHER_ACTION);
-            intent.putExtra(Launcher.LAUNCHER_SHOW_CUSTOM_ICON,Config.showCustomIcon);
-            getActivity().sendBroadcast(intent);
-            getActivity().onBackPressed();
-          }
-        });
-        break;
-      case R.id.openDeviceManager:
-        startActivity(new Intent().setComponent(new ComponentName("com.android.settings", "com.android.settings.DeviceAdminSettings")));
-        break;
-    }
+      } else if (id == R.id.showCustomIcon) {
+          Utils.checkStroagePermission(getActivity(), new Runnable() {
+              @Override
+              public void run() {
+                  Config.showCustomIcon = !Config.showCustomIcon;
+                  Intent intent = new Intent(Launcher.LAUNCHER_ACTION);
+                  intent.putExtra(Launcher.LAUNCHER_SHOW_CUSTOM_ICON, Config.showCustomIcon);
+                  getActivity().sendBroadcast(intent);
+                  getActivity().onBackPressed();
+              }
+          });
+      } else if (id == R.id.openDeviceManager) {
+          startActivity(new Intent().setComponent(new ComponentName("com.android.settings", "com.android.settings.DeviceAdminSettings")));
+      }
   }
 
   @Override
