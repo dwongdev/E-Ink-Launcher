@@ -7,6 +7,7 @@ import android.content.pm.ResolveInfo;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class AppDataCenter {
   private AppItemBinder binder;
   private TextView pageStatus;
   private final Set<String> hideApps = new HashSet<>();
+  private int sortMode = AppSortComparator.SORT_NAME_ASC;
 
   public AppDataCenter(Context context) {
     this.mContext = context;
@@ -97,6 +99,18 @@ public class AppDataCenter {
   }
 
   // =========================================================================
+  // 排序
+  // =========================================================================
+
+  public void setSortMode(int sortMode) {
+    this.sortMode = sortMode;
+  }
+
+  public int getSortMode() {
+    return sortMode;
+  }
+
+  // =========================================================================
   // 翻页
   // =========================================================================
 
@@ -156,6 +170,7 @@ public class AppDataCenter {
     if (!hideApps.contains(WIFI_PACKAGE_NAME)) {
       mApps.add(createWifiIcon());
     }
+    sortApps();
     updatePageCount();
   }
 
@@ -170,6 +185,7 @@ public class AppDataCenter {
     if (binder != null) {
       binder.setHideAppPkg(hideApps);
     }
+    sortApps();
     updatePageCount();
   }
 
@@ -186,6 +202,10 @@ public class AppDataCenter {
     pageCount = mApps.size() / itemCount - (mApps.size() % itemCount == 0 ? 1 : 0);
     pageCount = Math.max(pageCount, 0);
     pageIndex = Math.min(pageIndex, pageCount);
+  }
+
+  private void sortApps() {
+    Collections.sort(mApps, new AppSortComparator(mContext, mContext.getPackageManager(), sortMode));
   }
 
   // =========================================================================

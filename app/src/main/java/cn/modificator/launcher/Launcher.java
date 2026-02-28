@@ -186,6 +186,7 @@ public class Launcher extends Activity
 
     // 初始化数据中心
     dataCenter = new AppDataCenter(this);
+    dataCenter.setSortMode(config.getSortMode());
     dataCenter.setHideApps(config.getHideApps());
     dataCenter.setPageStatus(pageStatus);
     dataCenter.setAdapter(adapter);
@@ -289,6 +290,12 @@ public class Launcher extends Activity
     binder.setDelete(true);
     dataCenter.refreshAppList(true);
     findViewById(R.id.deleteFinish).setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void onSortModeChanged(int mode) {
+    dataCenter.setSortMode(mode);
+    dataCenter.refreshAppList(binder.isDelete());
   }
 
   // =========================================================================

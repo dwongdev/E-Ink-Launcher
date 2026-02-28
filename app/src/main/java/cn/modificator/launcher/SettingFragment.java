@@ -12,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import cn.modificator.launcher.ftpservice.FTPService;
+import cn.modificator.launcher.model.AppSortComparator;
 import cn.modificator.launcher.model.WifiControl;
 
 /**
@@ -40,6 +42,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     void onHideDividerChanged(boolean hide);
     void onShowStatusBarChanged(boolean show);
     void onShowCustomIconChanged(boolean show);
+    void onSortModeChanged(int mode);
     void onEnterManageMode();
   }
 
@@ -48,6 +51,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
   private Spinner colNumSpinner;
   private Spinner rowNumSpinner;
   private Spinner appNameLinesSpinner;
+  private Spinner sortModeSpinner;
   private SeekBar fontControl;
   private View rootView;
   private TextView hideDivider;
@@ -108,6 +112,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     colNumSpinner = rootView.findViewById(R.id.col_num_spinner);
     rowNumSpinner = rootView.findViewById(R.id.row_num_spinner);
     appNameLinesSpinner = rootView.findViewById(R.id.appNameLine);
+    sortModeSpinner = rootView.findViewById(R.id.sortModeSpinner);
 
     showStatusBar.setOnClickListener(this);
     hideDivider.setOnClickListener(this);
@@ -157,6 +162,28 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
         int lines = (position == 3) ? Integer.MAX_VALUE : position;
         config.setAppNameLines(lines);
         listener.onAppNameLinesChanged(lines);
+      }
+
+      @Override
+      public void onNothingSelected(AdapterView<?> parent) {
+      }
+    });
+
+    sortModeSpinner.setSelection(config.getSortMode(), false);
+    sortModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (AppSortComparator.modeNeedsUsageStats(position)
+            && !AppSortComparator.hasUsageStatsPermission(getActivity())) {
+          Toast.makeText(getActivity(), R.string.sort_need_usage_permission, Toast.LENGTH_LONG).show();
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+          }
+          sortModeSpinner.setSelection(config.getSortMode(), false);
+          return;
+        }
+        config.setSortMode(position);
+        listener.onSortModeChanged(position);
       }
 
       @Override

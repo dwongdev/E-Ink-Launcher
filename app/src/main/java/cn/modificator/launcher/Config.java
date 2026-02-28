@@ -22,6 +22,7 @@ public class Config {
   public static final String KEY_HIDE_DIVIDER = "launcherHideDivider";
   public static final String KEY_SHOW_STATUS_BAR = "launcherShowStatusBar";
   public static final String KEY_SHOW_CUSTOM_ICON = "launcherShowCustomIcon";
+  public static final String KEY_SORT_MODE = "launcherSortMode";
 
   // ---- 默认值 ----
   private static final int DEFAULT_COL_NUM = 5;
@@ -31,6 +32,7 @@ public class Config {
   private static final boolean DEFAULT_HIDE_DIVIDER = true;
   private static final boolean DEFAULT_SHOW_STATUS_BAR = true;
   private static final boolean DEFAULT_SHOW_CUSTOM_ICON = false;
+  private static final int DEFAULT_SORT_MODE = 0;
 
   private static final String PREFS_FILE = "launcherPropertyFile";
 
@@ -44,6 +46,7 @@ public class Config {
   private boolean hideDivider;
   private boolean showStatusBar;
   private boolean showCustomIcon;
+  private int sortMode = -1;
   private final Set<String> hideApps = new HashSet<>();
   private boolean hideAppsLoaded = false;
 
@@ -175,5 +178,20 @@ public class Config {
   public void setAppNameLines(int lines) {
     this.appNameLines = lines;
     prefs.edit().putInt(KEY_APP_NAME_LINES, lines).apply();
+  }
+
+  // ---- 排序方式 ----
+
+  public int getSortMode() {
+    if (sortMode == -1) {
+      sortMode = prefs.getInt(KEY_SORT_MODE, DEFAULT_SORT_MODE);
+    }
+    return sortMode;
+  }
+
+  public void setSortMode(int mode) {
+    if (this.sortMode == mode) return;
+    this.sortMode = mode;
+    prefs.edit().putInt(KEY_SORT_MODE, mode).apply();
   }
 }
