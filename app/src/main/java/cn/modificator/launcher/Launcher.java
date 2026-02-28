@@ -48,10 +48,8 @@ import cn.modificator.launcher.widgets.LauncherAdapter;
  * 主界面 Activity - E-Ink 墨水屏桌面启动器。
  */
 public class Launcher extends Activity
-    implements AppItemBinder.Callback, EInkLauncherView.OnPageChangeListener {
-
-  /** 广播 Action：设置页通过广播通知主界面刷新 */
-  public static final String ACTION_LAUNCHER_UPDATE = "launcherReceiver";
+    implements AppItemBinder.Callback, EInkLauncherView.OnPageChangeListener,
+    SettingFragment.OnSettingChangeListener {
 
   private static final int REQUEST_DEVICE_ADMIN = 10001;
 
@@ -76,7 +74,6 @@ public class Launcher extends Activity
   private DevicePolicyManager policyManager;
 
   // ---- Receivers ----
-  private LauncherUpdateReceiver updateReceiver;
   private FTPReceiver ftpReceiver = new FTPReceiver();
   private boolean batteryRegistered;
   private boolean timeRegistered;
@@ -153,7 +150,6 @@ public class Launcher extends Activity
   protected void onDestroy() {
     super.onDestroy();
     unregisterDynamicReceivers();
-    unregisterReceiver(updateReceiver);
     unregisterReceiver(appChangeReceiver);
   }
 
@@ -247,20 +243,57 @@ public class Launcher extends Activity
   }
 
   // =========================================================================
-  // 布局更新
+  // SettingFragment.OnSettingChangeListener 实现
   // =========================================================================
 
-  private void updateRowNum(int rowNum) {
+  @Override
+  public void onRowNumChanged(int rowNum) {
     launcherView.setRowNum(rowNum);
     dataCenter.setRowNum(rowNum);
-    config.setRowNum(rowNum);
   }
 
-  private void updateColNum(int colNum) {
+  @Override
+  public void onColNumChanged(int colNum) {
     launcherView.setColNum(colNum);
     dataCenter.setColNum(colNum);
-    config.setColNum(colNum);
   }
+
+  @Override
+  public void onFontSizeChanged(float size) {
+    adapter.setFontSize(size);
+  }
+
+  @Override
+  public void onAppNameLinesChanged(int lines) {
+    adapter.setAppNameLines(lines);
+  }
+
+  @Override
+  public void onHideDividerChanged(boolean hide) {
+    launcherView.setHideDivider(hide);
+  }
+
+  @Override
+  public void onShowStatusBarChanged(boolean show) {
+    applyStatusBarVisibility();
+  }
+
+  @Override
+  public void onShowCustomIconChanged(boolean show) {
+    iconCache.markDirty();
+    refreshIcons();
+  }
+
+  @Override
+  public void onEnterManageMode() {
+    binder.setDelete(true);
+    dataCenter.refreshAppList(true);
+    findViewById(R.id.deleteFinish).setVisibility(View.VISIBLE);
+  }
+
+  // =========================================================================
+  // 布局更新
+  // =========================================================================
 
   private void refreshIcons() {
     if (adapter == null || iconCache == null) return;
@@ -450,11 +483,6 @@ public class Launcher extends Activity
 
   /** 注册生命周期不变的静态广播 */
   private void registerStaticReceivers() {
-    // Launcher 设置更新广播
-    updateReceiver = new LauncherUpdateReceiver();
-    IntentFilter launcherFilter = new IntentFilter(ACTION_LAUNCHER_UPDATE);
-    registerCompatReceiver(updateReceiver, launcherFilter);
-
     // 应用安装/卸载广播
     IntentFilter appChangeFilter = new IntentFilter();
     appChangeFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -518,46 +546,6 @@ public class Launcher extends Activity
 
   private void registerCompatReceiver(BroadcastReceiver receiver, IntentFilter filter) {
     Utils.registerReceiverCompat(this, receiver, filter);
-  }
-
-  // =========================================================================
-  // 设置更新广播接收器
-  // =========================================================================
-
-  private class LauncherUpdateReceiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-      Bundle bundle = intent.getExtras();
-      if (bundle == null) return;
-
-      if (bundle.containsKey(Config.KEY_ROW_NUM)) {
-        updateRowNum(bundle.getInt(Config.KEY_ROW_NUM));
-      } else if (bundle.containsKey(Config.KEY_COL_NUM)) {
-        updateColNum(bundle.getInt(Config.KEY_COL_NUM));
-      } else if (bundle.containsKey(Config.KEY_HIDE_APPS)) {
-        binder.setDelete(true);
-        dataCenter.refreshAppList(true);
-        findViewById(R.id.deleteFinish).setVisibility(View.VISIBLE);
-      } else if (bundle.containsKey(Config.KEY_FONT_SIZE)) {
-        adapter.setFontSize(bundle.getFloat(Config.KEY_FONT_SIZE));
-      } else if (bundle.containsKey(Config.KEY_HIDE_DIVIDER)) {
-        boolean hide = bundle.getBoolean(Config.KEY_HIDE_DIVIDER);
-        launcherView.setHideDivider(hide);
-        config.setHideDivider(hide);
-      } else if (bundle.containsKey(Config.KEY_SHOW_STATUS_BAR)) {
-        config.setShowStatusBar(bundle.getBoolean(Config.KEY_SHOW_STATUS_BAR));
-        applyStatusBarVisibility();
-      } else if (bundle.containsKey(Config.KEY_SHOW_CUSTOM_ICON)) {
-        config.setShowCustomIcon(bundle.getBoolean(Config.KEY_SHOW_CUSTOM_ICON));
-        iconCache.markDirty();
-        refreshIcons();
-      } else if (bundle.containsKey(Config.KEY_APP_NAME_LINES)) {
-        int lines = bundle.getInt(Config.KEY_APP_NAME_LINES);
-        if (lines == 3) lines = Integer.MAX_VALUE;
-        config.setAppNameLines(lines);
-        adapter.setAppNameLines(lines);
-      }
-    }
   }
 
   // =========================================================================

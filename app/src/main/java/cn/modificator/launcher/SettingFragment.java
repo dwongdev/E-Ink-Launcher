@@ -1,6 +1,7 @@
 package cn.modificator.launcher;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -30,6 +31,20 @@ import cn.modificator.launcher.model.WifiControl;
  */
 public class SettingFragment extends Fragment implements View.OnClickListener {
 
+  /** 设置变更回调接口：宿主 Activity 应实现此接口以响应设置变更。 */
+  public interface OnSettingChangeListener {
+    void onRowNumChanged(int rowNum);
+    void onColNumChanged(int colNum);
+    void onFontSizeChanged(float size);
+    void onAppNameLinesChanged(int lines);
+    void onHideDividerChanged(boolean hide);
+    void onShowStatusBarChanged(boolean show);
+    void onShowCustomIconChanged(boolean show);
+    void onEnterManageMode();
+  }
+
+  private OnSettingChangeListener listener;
+
   private Spinner colNumSpinner;
   private Spinner rowNumSpinner;
   private Spinner appNameLinesSpinner;
@@ -41,6 +56,17 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
   private TextView showStatusBar;
   private TextView showCustomIcon;
   private Config config;
+
+  @SuppressWarnings("deprecation")
+  @Override
+  public void onAttach(Activity activity) {
+    super.onAttach(activity);
+    if (activity instanceof OnSettingChangeListener) {
+      listener = (OnSettingChangeListener) activity;
+    } else {
+      throw new ClassCastException(activity.toString() + " must implement OnSettingChangeListener");
+    }
+  }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -102,7 +128,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
       public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         int rowNum = position + 2;
         config.setRowNum(rowNum);
-        sendLauncherUpdate(Config.KEY_ROW_NUM, rowNum);
+        listener.onRowNumChanged(rowNum);
       }
 
       @Override
@@ -116,7 +142,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
       public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         int colNum = position + 2;
         config.setColNum(colNum);
-        sendLauncherUpdate(Config.KEY_COL_NUM, colNum);
+        listener.onColNumChanged(colNum);
       }
 
       @Override
@@ -128,8 +154,9 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     appNameLinesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        config.setAppNameLines(position);
-        sendLauncherUpdate(Config.KEY_APP_NAME_LINES, position);
+        int lines = (position == 3) ? Integer.MAX_VALUE : position;
+        config.setAppNameLines(lines);
+        listener.onAppNameLinesChanged(lines);
       }
 
       @Override
@@ -145,9 +172,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
         if (fromUser) {
           float newSize = 10 + progress / 10f;
           config.setFontSize(newSize);
-          Intent intent = new Intent(Launcher.ACTION_LAUNCHER_UPDATE);
-          intent.putExtra(Config.KEY_FONT_SIZE, newSize);
-          getActivity().sendBroadcast(intent);
+          listener.onFontSizeChanged(newSize);
         }
       }
 
@@ -163,23 +188,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
 
   private int getAppLineSpinnerSelectPosition() {
     int lines = config.getAppNameLines();
-    return (lines < 3) ? lines : 3;
-  }
-
-  // =========================================================================
-  // 广播辅助
-  // =========================================================================
-
-  private void sendLauncherUpdate(String key, int value) {
-    Intent intent = new Intent(Launcher.ACTION_LAUNCHER_UPDATE);
-    intent.putExtra(key, value);
-    getActivity().sendBroadcast(intent);
-  }
-
-  private void sendLauncherUpdate(String key, boolean value) {
-    Intent intent = new Intent(Launcher.ACTION_LAUNCHER_UPDATE);
-    intent.putExtra(key, value);
-    getActivity().sendBroadcast(intent);
+    return (lines <= 2) ? lines : 3;
   }
 
   // =========================================================================
@@ -218,14 +227,14 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
   }
 
   private void handleDeleteApp() {
-    sendLauncherUpdate(Config.KEY_HIDE_APPS, true);
+    listener.onEnterManageMode();
     getActivity().onBackPressed();
   }
 
   private void handleToggleStatusBar() {
     boolean newValue = !config.isShowStatusBar();
     config.setShowStatusBar(newValue);
-    sendLauncherUpdate(Config.KEY_SHOW_STATUS_BAR, newValue);
+    listener.onShowStatusBarChanged(newValue);
     getActivity().onBackPressed();
   }
 
@@ -233,7 +242,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     boolean newValue = !config.isHideDivider();
     config.setHideDivider(newValue);
     hideDivider.setText(newValue ? "显示分隔线" : "隐藏分隔线");
-    sendLauncherUpdate(Config.KEY_HIDE_DIVIDER, newValue);
+    listener.onHideDividerChanged(newValue);
     getActivity().onBackPressed();
   }
 
@@ -266,7 +275,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
       public void run() {
         boolean newValue = !config.isShowCustomIcon();
         config.setShowCustomIcon(newValue);
-        sendLauncherUpdate(Config.KEY_SHOW_CUSTOM_ICON, newValue);
+        listener.onShowCustomIconChanged(newValue);
         getActivity().onBackPressed();
       }
     });
