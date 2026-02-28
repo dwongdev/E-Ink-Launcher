@@ -39,6 +39,7 @@ import cn.modificator.launcher.model.AppDataCenter;
 import cn.modificator.launcher.model.HomeEntranceService;
 import cn.modificator.launcher.model.IconCache;
 import cn.modificator.launcher.model.WifiControl;
+import cn.modificator.launcher.widgets.AppItemBinder;
 import cn.modificator.launcher.widgets.BatteryView;
 import cn.modificator.launcher.widgets.EInkLauncherView;
 import cn.modificator.launcher.widgets.LauncherAdapter;
@@ -47,7 +48,7 @@ import cn.modificator.launcher.widgets.LauncherAdapter;
  * 主界面 Activity - E-Ink 墨水屏桌面启动器。
  */
 public class Launcher extends Activity
-    implements LauncherAdapter.Callback, EInkLauncherView.OnPageChangeListener {
+    implements AppItemBinder.Callback, EInkLauncherView.OnPageChangeListener {
 
   /** 广播 Action：设置页通过广播通知主界面刷新 */
   public static final String ACTION_LAUNCHER_UPDATE = "launcherReceiver";
@@ -68,6 +69,7 @@ public class Launcher extends Activity
   private boolean isChina = true;
   private IconCache iconCache;
   private LauncherAdapter adapter;
+  private AppItemBinder binder;
   private boolean isSystemApp = false;
 
   // ---- Device Admin ----
@@ -99,7 +101,7 @@ public class Launcher extends Activity
     @Override
     public void onReceive(Context context, Intent intent) {
       iconCache.clearAppCache();
-      dataCenter.refreshAppList(adapter.isDelete());
+      dataCenter.refreshAppList(binder.isDelete());
     }
   };
 
@@ -173,12 +175,14 @@ public class Launcher extends Activity
         Utils.tintDrawable(getResources().getDrawable(R.drawable.navibar_icon_settings_highlight),
             ColorStateList.valueOf(0xff000000)));
 
-    // 配置 Adapter & View
+    // 配置 Binder、Adapter、View
     iconCache = new IconCache();
-    adapter = new LauncherAdapter(getPackageManager());
-    adapter.setCallback(this);
-    adapter.setIconCache(iconCache);
-    adapter.setHideAppPkg(config.getHideApps());
+    binder = new AppItemBinder(getPackageManager());
+    binder.setCallback(this);
+    binder.setIconCache(iconCache);
+    binder.setHideAppPkg(config.getHideApps());
+    adapter = new LauncherAdapter();
+    adapter.setBinder(binder);
     adapter.setFontSize(config.getFontSize());
     adapter.setAppNameLines(config.getAppNameLines());
     launcherView.setAdapter(adapter);
@@ -223,7 +227,7 @@ public class Launcher extends Activity
     findViewById(R.id.deleteFinish).setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        adapter.setDelete(false);
+        binder.setDelete(false);
         dataCenter.refreshAppList();
         config.setHideApps(dataCenter.getHideApps());
         v.setVisibility(View.GONE);
@@ -265,7 +269,7 @@ public class Launcher extends Activity
   }
 
   // =========================================================================
-  // LauncherAdapter.Callback 实现
+  // AppItemBinder.Callback 实现
   // =========================================================================
 
   @Override
@@ -356,7 +360,7 @@ public class Launcher extends Activity
         .setNeutralButton(R.string.dialog_hide, new DialogInterface.OnClickListener() {
           @Override
           public void onClick(DialogInterface dialog, int which) {
-            Set<String> hideApps = adapter.getHideAppPkg();
+            Set<String> hideApps = binder.getHideAppPkg();
             if (!hideApps.add(packageName)) {
               hideApps.remove(packageName);
             }
@@ -527,7 +531,7 @@ public class Launcher extends Activity
       } else if (bundle.containsKey(Config.KEY_COL_NUM)) {
         updateColNum(bundle.getInt(Config.KEY_COL_NUM));
       } else if (bundle.containsKey(Config.KEY_HIDE_APPS)) {
-        adapter.setDelete(true);
+        binder.setDelete(true);
         dataCenter.refreshAppList(true);
         findViewById(R.id.deleteFinish).setVisibility(View.VISIBLE);
       } else if (bundle.containsKey(Config.KEY_FONT_SIZE)) {

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import cn.modificator.launcher.R;
+import cn.modificator.launcher.widgets.AppItemBinder;
 import cn.modificator.launcher.widgets.LauncherAdapter;
 
 /**
@@ -31,6 +32,7 @@ public class AppDataCenter {
   private int colNum = 5;
   private int rowNum = 5;
   private LauncherAdapter adapter;
+  private AppItemBinder binder;
   private TextView pageStatus;
   private final Set<String> hideApps = new HashSet<>();
 
@@ -39,12 +41,15 @@ public class AppDataCenter {
   }
 
   // =========================================================================
-  // Adapter 绑定
+  // Adapter / Binder 绑定
   // =========================================================================
 
   public void setAdapter(LauncherAdapter adapter) {
     this.adapter = adapter;
-    adapter.setHideAppPkg(hideApps);
+    this.binder = adapter.getBinder();
+    if (binder != null) {
+      binder.setHideAppPkg(hideApps);
+    }
     setPageShow();
   }
 
@@ -132,9 +137,9 @@ public class AppDataCenter {
     Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
     mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-    if (adapter != null) {
+    if (binder != null) {
       hideApps.clear();
-      hideApps.addAll(adapter.getHideAppPkg());
+      hideApps.addAll(binder.getHideAppPkg());
     }
 
     mApps.clear();
@@ -162,7 +167,9 @@ public class AppDataCenter {
     mApps.addAll(mContext.getPackageManager().queryIntentActivities(mainIntent, 0));
     mApps.add(createPowerIcon());
     mApps.add(createWifiIcon());
-    adapter.setHideAppPkg(hideApps);
+    if (binder != null) {
+      binder.setHideAppPkg(hideApps);
+    }
     updatePageCount();
   }
 
