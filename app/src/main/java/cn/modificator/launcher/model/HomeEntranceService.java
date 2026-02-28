@@ -38,7 +38,8 @@ public class HomeEntranceService extends Service {
         startForeground(1, builder
                 .setWhen(System.currentTimeMillis())
                 .setContentTitle(getString(R.string.notification_click_back_launcher))
-                .setContentIntent(PendingIntent.getActivity(this, 10, new Intent(this, Launcher.class), Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
+                .setContentIntent(PendingIntent.getActivity(this, 10, new Intent(this, Launcher.class),
+                    PendingIntent.FLAG_IMMUTABLE | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build()
         );

@@ -453,7 +453,7 @@ public class Launcher extends Activity
     // Launcher 设置更新广播
     updateReceiver = new LauncherUpdateReceiver();
     IntentFilter launcherFilter = new IntentFilter(ACTION_LAUNCHER_UPDATE);
-    registerReceiver(updateReceiver, launcherFilter);
+    registerCompatReceiver(updateReceiver, launcherFilter);
 
     // 应用安装/卸载广播
     IntentFilter appChangeFilter = new IntentFilter();
@@ -461,17 +461,17 @@ public class Launcher extends Activity
     appChangeFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
     appChangeFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
     appChangeFilter.addDataScheme("package");
-    registerReceiver(appChangeReceiver, appChangeFilter);
+    registerCompatReceiver(appChangeReceiver, appChangeFilter);
   }
 
   /** 注册跟随 onResume/onPause 的动态广播 */
   private void registerDynamicReceivers() {
     if (!batteryRegistered) {
-      registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+      registerCompatReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
       batteryRegistered = true;
     }
     if (!timeRegistered) {
-      registerReceiver(timeReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+      registerCompatReceiver(timeReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
       timeRegistered = true;
     }
     updateTimeShow();
@@ -481,7 +481,7 @@ public class Launcher extends Activity
     if (!ftpRegistered) {
       IntentFilter ftpFilter = new IntentFilter(FTPService.ACTION_START_FTPSERVER);
       ftpFilter.addAction(FTPService.ACTION_STOP_FTPSERVER);
-      registerReceiver(ftpReceiver, ftpFilter);
+      registerCompatReceiver(ftpReceiver, ftpFilter);
       ftpRegistered = true;
     }
   }
@@ -512,8 +512,12 @@ public class Launcher extends Activity
     usbFilter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
     usbFilter.addAction(Intent.ACTION_MEDIA_REMOVED);
     usbFilter.addDataScheme("file");
-    registerReceiver(usbReceiver, usbFilter);
+    registerCompatReceiver(usbReceiver, usbFilter);
     usbRegistered = true;
+  }
+
+  private void registerCompatReceiver(BroadcastReceiver receiver, IntentFilter filter) {
+    Utils.registerReceiverCompat(this, receiver, filter);
   }
 
   // =========================================================================

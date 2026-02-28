@@ -2,7 +2,9 @@ package cn.modificator.launcher;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
@@ -79,6 +81,19 @@ public class Utils {
       if (hours < 6) return CN_AM_PM[5];        // 下午
       if (hours <= 9) return CN_AM_PM[6];       // 晚上
       return CN_AM_PM[7];                        // 深夜
+    }
+  }
+
+  /**
+   * 兼容 Android 13+ 的广播注册。
+   * API 33 起需要指定 RECEIVER_EXPORTED / RECEIVER_NOT_EXPORTED。
+   */
+  public static void registerReceiverCompat(Context context, BroadcastReceiver receiver,
+                                             IntentFilter filter) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+    } else {
+      context.registerReceiver(receiver, filter);
     }
   }
 

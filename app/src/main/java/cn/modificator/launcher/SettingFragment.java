@@ -291,13 +291,13 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     updateFtpStatus();
 
     IntentFilter wifiFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-    getActivity().registerReceiver(wifiReceiver, wifiFilter);
+    Utils.registerReceiverCompat(getActivity(), wifiReceiver, wifiFilter);
 
     IntentFilter ftpFilter = new IntentFilter();
     ftpFilter.addAction(FTPService.ACTION_STARTED);
     ftpFilter.addAction(FTPService.ACTION_STOPPED);
     ftpFilter.addAction(FTPService.ACTION_FAILEDTOSTART);
-    getActivity().registerReceiver(ftpReceiver, ftpFilter);
+    Utils.registerReceiverCompat(getActivity(), ftpReceiver, ftpFilter);
   }
 
   @Override

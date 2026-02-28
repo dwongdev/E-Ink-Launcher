@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.Map;
 
 import cn.modificator.launcher.R;
+import cn.modificator.launcher.Utils;
 import cn.modificator.launcher.widgets.ObserverFontTextView;
 import cn.modificator.launcher.widgets.RatioImageView;
 
@@ -56,7 +57,7 @@ public class WifiControl {
     IntentFilter filter = new IntentFilter();
     filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
     filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-    appContext.registerReceiver(wifiStateReceiver, filter);
+    Utils.registerReceiverCompat(appContext, wifiStateReceiver, filter);
   }
 
   public static void bind(View view, Map<String, File> iconReplaceMap) {
